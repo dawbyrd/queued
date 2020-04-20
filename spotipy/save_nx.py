@@ -13,7 +13,7 @@ if __name__ == '__main__':
         scope = 'playlist-read-private user-library-read user-read-private user-read-email user-read-currently-playing user-read-recently-played user-read-playback-state'
         users = sys.argv[1:]
         for u in users:
-            t = util.prompt_for_user_token(u, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri)
+            t = util.prompt_for_user_token(u, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri,cache_path="tokens/.cache-"+u)
             if t:
                 sp = spotipy.Spotify(auth=t)
                 usid = sp.current_user()['id']

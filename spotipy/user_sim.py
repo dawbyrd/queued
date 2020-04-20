@@ -125,8 +125,8 @@ def user_sim(id1, id2):
 
 def similarity(user1, user2):
     scope = 'playlist-read-private user-library-read user-read-private user-read-email user-read-currently-playing user-read-recently-played user-read-playback-state'
-    t1 = util.prompt_for_user_token(user1, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri)
-    t2 = util.prompt_for_user_token(user2, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri)
+    t1 = util.prompt_for_user_token(user1, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri, cache_path="tokens/.cache-"+user1)
+    t2 = util.prompt_for_user_token(user2, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri, cache_path="tokens/.cache-"+user2)
     if t1 and t2:
         sp1, sp2 = spotipy.Spotify(auth=t1), spotipy.Spotify(auth=t2)
         id1, id2 = sp1.current_user()['id'], sp2.current_user()['id']
@@ -158,7 +158,7 @@ def main(users):
                 k+=1
                 print(p[0][0], p[0][1], p[1])
         print("")
-        
+
     return values
 
 if __name__ == '__main__':

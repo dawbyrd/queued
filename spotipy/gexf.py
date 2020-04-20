@@ -2,7 +2,6 @@ from gen_data import Artist, Song
 import sys
 import os
 import json
-import spotipy.util as util
 import spotipy
 
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring

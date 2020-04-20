@@ -27,7 +27,8 @@ if __name__ == '__main__':
                            scope,
                            client_id='8698031f9fa24db79f2074418f296b10',
                            client_secret='c2b602ae3ef1446f9d5164ca724ff318',
-                           redirect_uri='http://localhost:8888/callback')
+                           redirect_uri='http://localhost:8888/callback',
+                           cache_path="tokens/.cache-"+username)
     if token:
         sp = spotipy.Spotify(auth=token)
         usid = sp.current_user()['id']
