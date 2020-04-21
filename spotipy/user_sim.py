@@ -143,6 +143,14 @@ def main(users):
             values[(a,b)] = similarity(a,b)
             print("progress:"+str(i)+"/"+str(num), end="\r")
             i+=1
+
+    G = nx.MultiDiGraph()
+    for k in values:
+        G.add_edge(k[0], k[1], weight=values[k]['kl'])
+    nx.write_gexf(G, "data/gexf/user_graph.gexf")
+
+    sys.exit() #comment this out if want to print metrics for each pair
+
     pairs = sorted(values.items(), key = lambda kv: kv[1]['kl'])
     for p in pairs:
         print(p[0][0], p[0][1], p[1])
@@ -158,8 +166,6 @@ def main(users):
                 k+=1
                 print(p[0][0], p[0][1], p[1])
         print("")
-
-    return values
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
