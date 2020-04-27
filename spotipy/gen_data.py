@@ -246,7 +246,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         users = sys.argv[1:]
     else:
-        print("Usage: %s username" % (sys.argv[0],))
+        print("Usage: %s usernames" % (sys.argv[0],))
         sys.exit()
 
     for u in users:
@@ -276,32 +276,39 @@ if __name__ == '__main__':
             if config==False:
                 playlists = sp.current_user_playlists()
                 ctracks = []
-                for playlist in playlists['items']:
-                    if(playlist['name'] == 'Discover Archive'): continue
-                    if playlist['owner']['id'] == usid:
-                        # print(playlist['owner']['id'])
-                        print(playlist['name'].encode('utf-8'))
-                        # print ('  total tracks', playlist['tracks']['total'])
-                        results = sp.playlist(playlist['id'],
-                            fields="tracks,next")
-                        tracks = results['tracks']
-                        ctracks.extend(enum_tracks(tracks))
-
-                        while tracks['next']: #this is because tracks can only hold 100 at a time? even within same playlist?
-                            tracks = sp.next(tracks)
+                while playlists:
+                    for playlist in playlists['items']:
+                        if(playlist['name'] == 'Discover Archive'): continue
+                        if playlist['owner']['id'] == usid:
+                            # print(playlist['owner']['id'])
+                            print(playlist['name'].encode('utf-8'))
+                            # print ('  total tracks', playlist['tracks']['total'])
+                            results = sp.playlist(playlist['id'],
+                                fields="tracks,next")
+                            tracks = results['tracks']
                             ctracks.extend(enum_tracks(tracks))
 
-                        sz = len(ctracks)
-                        print(sz)
-                        for i in range(sz):
-                            tr1 = ctracks[i]
-                            if(tr1['track']['id'] == None): continue
-                            for j in range(sz):
-                                tr2 = ctracks[j]
-                                if(tr2['track']['id'] == None): continue
-                                sg.add_edge(tr1['track'],tr2['track'],tr1['added_at'],sz,365*3)
-                            sg.stream(tr1['track'])
-                        ctracks.clear()
+                            while tracks['next']: #this is because tracks can only hold 100 at a time? even within same playlist?
+                                tracks = sp.next(tracks)
+                                ctracks.extend(enum_tracks(tracks))
+
+                            sz = len(ctracks)
+                            print(sz)
+                            for i in range(sz):
+                                tr1 = ctracks[i]
+                                if(tr1['track']['id'] == None): continue
+                                print(tr1['track']['name'].encode('utf-8'))
+                                for j in range(sz):
+                                    tr2 = ctracks[j]
+                                    if(tr2['track']['id'] == None): continue
+                                    sg.add_edge(tr1['track'],tr2['track'],tr1['added_at'],sz,365*3)
+                                sg.stream(tr1['track'])
+                            ctracks.clear()
+
+                    if playlists['next']:
+                        playlists = sp.next(playlists)
+                    else:
+                        playlists = None
 
             results = sp.current_user_recently_played()
             sessions = []
@@ -368,4 +375,4 @@ if __name__ == '__main__':
                 print("saved succesfully")
 
         else:
-            print("Can't get token for", username)
+            print("Can't get token for", u)

@@ -4,6 +4,8 @@ import spotipy.util as util
 import networkx as nx
 import sys
 
+# TODO: make this process faster by only adding edges and nodes that don't already exist
+
 client_id = '8698031f9fa24db79f2074418f296b10'
 client_secret='c2b602ae3ef1446f9d5164ca724ff318'
 redirect_uri='http://localhost:8888/callback'

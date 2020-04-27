@@ -104,17 +104,17 @@ def complex_sim(gpr1, gpr2):
         sim += gpr1[g]*sum
     return sim
 
-def user_sim(id1, id2):
-    if id1 in graphs:
-        G1 = graphs[id1]
+def user_sim(id1,id2,type):
+    if (type+id1) in graphs:
+        G1 = graphs[type+id1]
     else:
-        G1 = nx.read_gexf("data/gexf/G"+id1+".gexf")
-        graphs[id1] = G1
-    if id2 in graphs:
-        G2 = graphs[id2]
+        G1 = nx.read_gexf("data/gexf/"+type+id1+".gexf")
+        graphs[type+id1] = G1
+    if (type+id2) in graphs:
+        G2 = graphs[type+id2]
     else:
-        G2 = nx.read_gexf("data/gexf/G"+id2+".gexf")
-        graphs[id2] = G2
+        G2 = nx.read_gexf("data/gexf/"+type+id2+".gexf")
+        graphs[type+id2] = G2
     gpr1 = nx.pagerank(G1, weight='weight')
     gpr2 = nx.pagerank(G2, weight='weight')
 
@@ -123,14 +123,14 @@ def user_sim(id1, id2):
     #     print(k[0],k[1])
     return {'kl': np.sum(list(kl.values())), 'bhat': bhat(gpr1,gpr2), 'cos': cosine_sim(gpr1,gpr2)}
 
-def similarity(user1, user2):
+def similarity(user1, user2, type):
     scope = 'playlist-read-private user-library-read user-read-private user-read-email user-read-currently-playing user-read-recently-played user-read-playback-state'
     t1 = util.prompt_for_user_token(user1, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri, cache_path="tokens/.cache-"+user1)
     t2 = util.prompt_for_user_token(user2, scope,client_id=client_id, client_secret=client_secret,redirect_uri=redirect_uri, cache_path="tokens/.cache-"+user2)
     if t1 and t2:
         sp1, sp2 = spotipy.Spotify(auth=t1), spotipy.Spotify(auth=t2)
         id1, id2 = sp1.current_user()['id'], sp2.current_user()['id']
-        return user_sim(id1,id2)
+        return user_sim(id1,id2,type)
     else:
         print("Can't get tokens for specified users")
 
@@ -138,34 +138,39 @@ def main(users):
     values = {}
     num = len(users)*len(users)
     i=0
+    values['G']={}
+    values['A']={}
+    values['S']={}
     for a in users:
         for b in users:
-            values[(a,b)] = similarity(a,b)
+            values['G'][(a,b)] = similarity(a,b,'G')
+            values['A'][(a,b)] = similarity(a,b,'A')
+            values['S'][(a,b)] = similarity(a,b,'S')
             print("progress:"+str(i)+"/"+str(num), end="\r")
             i+=1
 
-    G = nx.MultiDiGraph()
-    for k in values:
-        G.add_edge(k[0], k[1], weight=values[k]['kl'])
-    nx.write_gexf(G, "data/gexf/user_graph.gexf")
+    for type in ['S','A','G']:
+        G = nx.MultiDiGraph()
+        for k in values[type]:
+            G.add_edge(k[0], k[1], weight=values[type][k]['kl'])
+        nx.write_gexf(G, "data/gexf/"+type+"_user_graph.gexf")
+    # sys.exit() #comment this out if want to print metrics for each pair
 
-    sys.exit() #comment this out if want to print metrics for each pair
-
-    pairs = sorted(values.items(), key = lambda kv: kv[1]['kl'])
-    for p in pairs:
-        print(p[0][0], p[0][1], p[1])
-
-    rankings = {}
-    for a in users:
-        rankings[a] = 0
-    for a in users:
-        k=0
-        for p in pairs:
-            if(a == p[0][0]):
-                rankings[p[0][1]] += k
-                k+=1
-                print(p[0][0], p[0][1], p[1])
-        print("")
+        pairs = sorted(values[type].items(), key = lambda kv: kv[1]['kl'])
+        with open("out/"+type+"similarities.txt", "w") as f:
+            for p in pairs:
+                f.write(p[0][0]+" "+ p[0][1]+" "+str(p[1]['kl'])+"\n")
+            rankings = {}
+            for a in users:
+                rankings[a] = 0
+            for a in users:
+                k=0
+                for p in pairs:
+                    if(a == p[0][0]):
+                        rankings[p[0][1]] += k
+                        k+=1
+                        f.write(p[0][0]+" "+ p[0][1]+" "+str(p[1]['kl'])+"\n")
+                f.write("\n")
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
